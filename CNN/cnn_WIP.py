@@ -26,7 +26,6 @@ import os.path as path
 
 import tensorflow as tf
 from tensorflow.python.tools import freeze_graph
-from tensorflow.python.tools import optimize_for_inference_lib
 
 import numpy as np
 
@@ -34,6 +33,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 ###################################################################
 # global variables
+# side note: need to initialize variables before creating data graph
+# for unity BUT estimator should do that for me 
 epochs = 200
 batch_size = 64
 
@@ -52,7 +53,7 @@ learning_rate =
 
 
 ###################################################################
-# load training and testing data
+# load training and testing data - IDK HOW TO DO THIS YET
 
 def load():
 	d_train
@@ -63,7 +64,7 @@ def load():
 
 
 ###################################################################
-# define CNN model - SWITCH TO TENSOR FLOW TO COPY THEIR STUFF
+# define CNN model
 
 def cnn():
 	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
@@ -142,23 +143,6 @@ def cnn():
 
 
 ###################################################################
-# train the CNN
-
-def train(model, d_train, d_test):
-	model.compile(loss=WANT SIGMOID BLAH BLAH, optimiser=keras.optimizers.ADAPTIVEMOVEMENTESTIMATION()),
-					metrics=['accuracy'])
-	model.fit(d_train, batch_size=batch_size, epochs=epochs, verbose=True, validation_data=(d_test))
-
-###################################################################
-
-
-###################################################################
-# freeze CNN for Unity
-def freeze(saver, model, input_node_names, output_node_name):
-
-###################################################################
-
-###################################################################
 # main
 def main():
 	# load data
@@ -188,6 +172,15 @@ def main():
 		steps=IDK,
 		hooks=[logging_hook])
 
+	# freeze cnn - IDK IF THIS IS IN THE RIGHT PLACE
+	freeze_graph.freeze_graph(input_graph = model_path +'/raw_graph_def.pb',
+				input_binary = True,
+				input_checkpoint = last_checkpoint,
+				output_node_names = "action",
+				output_graph = model_path +'/frozen_wip_cnn1.bytes' ,
+				clear_devices = True, initializer_nodes = "",input_saver = "",
+				restore_op_name = "save/restore_all", filename_tensor_name = "save/Const:0")
+
 	eval_input_fn = tf.estimator.inputs.numpy_input_fn(
 		x=IDK,
 		y=IDK,
@@ -195,10 +188,6 @@ def main():
 		shuffle=False)
 	eval_results = wip_classifier.evaluate(input_fn=eval_input_fn)
 	print(eval_results)
-
-	# freeze cnn - LOOK UP HOW TO DO THIS THIS CODE IS LEFT OVER
-	freeze_model(tf.train.Saver(), model, ["conv1d_1_input"], "dense_1/Softmax")
-
 ###################################################################
 
 
