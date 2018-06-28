@@ -11,6 +11,7 @@
 #
 # dependencies:
 #	numpy
+#	pandas
 #
 ###################################################################
 # imports
@@ -32,19 +33,19 @@ tf.logging.set_verbosity(tf.logging.INFO)
 # global variables
 # side note: need to initialize variables before creating data graph
 # for unity BUT estimator should do that for me 
-epochs = 200
-batch_size = 64
+EPOCHS = 200
+BATCH_SIZE = 64
+TRAIN_STEPS = 1000
+
+TRAIN_PATH = 
+TEST_PATH = 
+# walking is 1, standing is 0
+CSV_COLUMN_NAMES = ['Euclidean_Accel', 'Activity']
 
 # Input/output dims are HARDCODED, need to be CHANGED w these vals
-window_size = 3
-input_shape = [1, 10, 1] 
-learning_rate = 
-
-###################################################################
-
-
-###################################################################
-# network parameters
+WINDOW_SIZE = 3
+INPUT_SHAPE = [1, 10, 1] 
+LEARNING_RATE = 0.001
 
 ###################################################################
 
@@ -52,12 +53,20 @@ learning_rate =
 ###################################################################
 # load training and testing data - IDK HOW TO DO THIS YET
 
-def load():
-	d_train
-	d_test
+def load_data():
+	train = pd.read_csv(filepath_or_buffer=TRAIN_PATH,
+						names=CSV_COLUMN_NAMES,
+						header=0)
+	train_feature, train_label = train, train.pop(label_name)
 
+	test = pd.read_csv(filepath_or_buffer=TEST_PATH,
+						names=CSV_COLUMN_NAMES,
+						header=0)
+	test_feature, test_label = test, test.pop(label_name)
 
+	(train_feature, train_label), (test_feature, test_label) = load_data()
 ###################################################################
+
 
 
 ###################################################################
@@ -65,7 +74,7 @@ def load():
 
 def cnn():
 	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
-	input_layer = tf.reshape(features['x'], [batch_size, 1, 10, 1])
+	input_layer = tf.reshape(features['x'], [-1, 1, 10, 1])
 
 	# Convolutional Layer
 	# side note - strides is automatically set to 1
@@ -74,7 +83,7 @@ def cnn():
 	conv = tf.layers.Conv1D(
 		inputs=input_layer,
 		filters=128,
-		kernel_size=window_size,
+		kernel_size=WINDOW_SIZE,
 		padding='same',
 		activation=tf.nn.relu)
 
@@ -83,13 +92,13 @@ def cnn():
 	# pool_size is the size of the kernel ?? strides default to 1 ??
 	# input shape: [batch_size, 1, 10, 128]
 	# output shape: [batch_size, 1, 3, 128]
-	pool = tf.layers.MaxPooling1D(inputs=conv, pool_size=window_size, padding='same')
+	pool = tf.layers.MaxPooling1D(inputs=conv, pool_size=WINDOW_SIZE, padding='same')
 
 
 	# Flatten Layer
 	# input shape: [batch_size, 1, 10, 128]
 	# output shape: [batch_size, 1 * 3 * 128]
-	pool_flat = tf.reshape(pool, [batch_size, 1 * 3 * 128])
+	pool_flat = tf.reshape(pool, [-1, 1 * 3 * 128])
 
 
 	# Dense Layer
@@ -123,7 +132,7 @@ def cnn():
 
 	# TRAIN mode: train with ADAM optimizer
 	if mode == tf.estimator.ModeKeys.TRAIN:
-		optimizer= tf.train.AdamOptimizer(learning_rate=learning_rate)
+		optimizer= tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
 		train_op = optimizer.minimize(
 			loss=loss,
 			global_step=tf.train.get_global_step())
@@ -135,38 +144,70 @@ def cnn():
 			labels=labels, predictions=predictions['classes'])}
 	return tf.estimator.EstimatorSpec(
 		mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+###################################################################
+
 
 ###################################################################
+# train function
+def train_input_fn(features, labels, batch_size):
+	dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
+
+	dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+
+	return dataset
+
+###################################################################
+
+
+###################################################################
+# eval function
+def eval_input_fn(features, labels=None, batch_size=None):
+	if labels is None:
+		inputs = features
+	else:
+		inputs = (features, labels)
+
+	dataset = tf.data.Dataset.from_tensor_slices(inputs)
+
+	assert batch_size is not None, "batch_size must not be None"
+	dataset = dataset.batch(batch_size)
+
+	return dataset.make_one_shot_iterator().get_next()
+###################################################################
+
 
 
 ###################################################################
 # main
 def main():
 	# load data
+	(train_feature, train_label), (test_feature, test_label) = load_data()
+
+	# set feature columns
+	my_feature_columns = []
+	for key in train_feature.keys():
+		my_feature_columns.append(tf.feature_column.numeric_column(key=key))
+
+	# build cnn
+	model_fn = cnn()
 
 	# create estimator
-	wip_classifier = tf.estimator.Estimator(
-		model_fn=cnn, model_dir='tmp/wip_cnn_model')
+	wip_classifier = tf.estimator.Estimator(model_fn=model_fn, 
+											params={
+												'feature_columns': my_feature_columns,
+											})
 
 	# set up logging
 	tensors_to_log = {'probabilities': 'softmax_tensor'}
 	logging_hook = tf.train.LoggingTensorHook(
 		tensors=tensors_to_log, every_n_iter=10)
 
-	# build cnn
-	model = cnn()
-
-	# train cnn - LOOK INTO THIS AND THE SHUFFLE = TRUE THING, x, y, and steps
-	train_input_fn = tf.estimator.inputs.numpy_input_fn(
-		x=IDK,
-		y=IDK,
-		batch_size=batch_size,
-		num_epochs=epochs,
-		shuffle=True)
+	# train cnn
+	train_input_fn = train_input_fn(train_feature, train_label, BATCH_SIZE)
 
 	wip_classifier.train(
 		input_fn=train_input_fn,
-		steps=IDK,
+		steps=TRAIN_STEPS,
 		hooks=[logging_hook])
 
 	# freeze cnn - IDK IF THIS IS IN THE RIGHT PLACE
@@ -178,13 +219,13 @@ def main():
 				clear_devices = True, initializer_nodes = "",input_saver = "",
 				restore_op_name = "save/restore_all", filename_tensor_name = "save/Const:0")
 
-	eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-		x=IDK,
-		y=IDK,
-		num_epochs=1,
-		shuffle=False)
+	# eval cnn
+	eval_input_fn = eval_input_fn(train_feature, train_label, BATCH_SIZE)
+
 	eval_results = wip_classifier.evaluate(input_fn=eval_input_fn)
-	print(eval_results)
+	print('\nTest set accuracy: {accuracy:0.3f}\n'.format(**eval_result))
+
+	# set up PREDICTIONS
 ###################################################################
 
 
