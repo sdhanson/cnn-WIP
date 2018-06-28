@@ -3,7 +3,7 @@
 #	CNN to recognize walking for WIP algorithm
 #
 # github: 
-#
+#	https://github.com/sdhanson/cnn-WIP
 #
 # versions:
 #	Python 2.7.5
