@@ -8,11 +8,8 @@
 # versions:
 #	Python 2.7.5
 #	TensorFlow 1.8.x
-#	Keras
 #
 # dependencies:
-#	os
-#	matplotlib
 #	numpy
 #
 ###################################################################
