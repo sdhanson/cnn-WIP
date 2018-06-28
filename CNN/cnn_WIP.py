@@ -11,7 +11,7 @@
 #
 # dependencies:
 #	numpy
-#	pandas
+#	panda
 #
 ###################################################################
 # imports
@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import os
 import os.path as path
+import pandas as pd
 
 import tensorflow as tf
 from tensorflow.python.tools import freeze_graph
@@ -37,8 +38,8 @@ EPOCHS = 200
 BATCH_SIZE = 64
 TRAIN_STEPS = 1000
 
-TRAIN_PATH = 
-TEST_PATH = 
+TRAIN_PATH = './train.csv'
+TEST_PATH = './test.csv'
 # walking is 1, standing is 0
 CSV_COLUMN_NAMES = ['Euclidean_Accel', 'Activity']
 
@@ -72,7 +73,7 @@ def load_data():
 ###################################################################
 # define CNN model
 
-def cnn():
+def cnn(features, labels, mode):
 	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
 	input_layer = tf.reshape(features['x'], [-1, 1, 10, 1])
 
@@ -115,13 +116,12 @@ def cnn():
 	logits = tf.layers.dense(inputs=dropout, units=2)
 
 	predictions = {
-		# finds the index of the largest value in the tensor
-		# IDK WHY THIS IS HELPFUL - later used in EVAL mode ??
-		'classes': tf.argmax(input=logits, axis=1)
-
-		# use softmax to calculate the result
-		'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
-	}
+        # Generate predictions (for PREDICT and EVAL mode)
+		"classes": tf.argmax(input=logits, axis=1),
+        # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
+        # `logging_hook`.
+		"probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+    }
 
 	# PREDICT mode: return the CNN predictions
 	if mode == tf.estimator.ModeKeys.PREDICT:
