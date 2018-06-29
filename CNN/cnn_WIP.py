@@ -30,6 +30,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from tensorflow.contrib import learn
+from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 ###################################################################
@@ -57,31 +60,31 @@ LEARNING_RATE = 0.001
 # load training and testing data - IDK HOW TO DO THIS YET
 
 def load_data():
+	print('\nLoading Data...\n')
+
 	data = pd.read_csv(filepath_or_buffer=DATA_PATH,
 						names=CSV_COLUMN_NAMES,
 						header=0,
 						usecols=[0, 1])
 
-	print (data.head(n=10))
-	#debugging
+	data_feature, data_label = data, data.pop('Activity')
 
-	# data_feature, data_label = data, data.pop(label_name)
-
-	# train_feature, train_label, test_feature, test_label = train_test_split(data_feature, data_label, test_size=0.2)
+	# test_size = 0.2 means 80% of data in train, 20% of data in test
+	train_feature, test_feature, train_label, test_label = train_test_split(data_feature, data_label, test_size=0.2)
 
 	# code from before splitting in the map - PROBABLY NEED TO SPLIT
 	# THE DATA IN ANOTHER FILE ???? no this is fine bc predict mode won't do this??
 	# train = pd.read_csv(filepath_or_buffer=TRAIN_PATH,
 	# 					names=CSV_COLUMN_NAMES,
 	# 					header=0)
-	# train_feature, train_label = train, train.pop(label_name)
+	# train_feature, train_label = train, train.pop('Activity')
 
 	# test = pd.read_csv(filepath_or_buffer=TEST_PATH,
 	# 					names=CSV_COLUMN_NAMES,
 	# 					header=0)
-	# test_feature, test_label = test, test.pop(label_name)
+	# test_feature, test_label = test, test.pop('Activity')
 
-	# (train_feature, train_label), (test_feature, test_label) = load_data()
+	return (train_feature, train_label), (test_feature, test_label)
 ###################################################################
 
 
@@ -89,15 +92,18 @@ def load_data():
 ###################################################################
 # define CNN model
 
-def cnn(features, labels, mode):
-	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
-	input_layer = tf.reshape(features['x'], [-1, 1, 10, 1])
+def cnn(features, labels, mode, params):
+	print('\nConfiguring CNN...\n')
 
+	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
+	# input_layer = tf.feature_column.input_layer(features, params['feature_columns'])
+	input_layer = tf.cast(tf.reshape(features["Euclidean_Accel"], [-1, 1, 10]), tf.float32)
+	print(type(input_layer))
 	# Convolutional Layer
 	# side note - strides is automatically set to 1
 	# input shape: [batch_size, 1, 10, 1]
 	# output shape: [batch_size, 1, 10, 128]
-	conv = tf.layers.Conv1D(
+	conv = tf.layers.conv1d(
 		inputs=input_layer,
 		filters=128,
 		kernel_size=WINDOW_SIZE,
@@ -109,7 +115,7 @@ def cnn(features, labels, mode):
 	# pool_size is the size of the kernel ?? strides default to 1 ??
 	# input shape: [batch_size, 1, 10, 128]
 	# output shape: [batch_size, 1, 3, 128]
-	pool = tf.layers.MaxPooling1D(inputs=conv, pool_size=WINDOW_SIZE, padding='same')
+	pool = tf.layers.max_pooling1d(inputs=conv, pool_size=WINDOW_SIZE, strides=1, padding='same')
 
 
 	# Flatten Layer
@@ -144,7 +150,7 @@ def cnn(features, labels, mode):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# TRAIN and EVAL mode: loss w sigmoid cross entropy given logits
-	loss=tf.losses.sigmoid_cross_entropy(labels=labels, logits=logits)
+	loss=tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
 
 	# TRAIN mode: train with ADAM optimizer
 	if mode == tf.estimator.ModeKeys.TRAIN:
@@ -165,12 +171,18 @@ def cnn(features, labels, mode):
 
 ###################################################################
 # train function
+# def get_input_fn(data_set, num_epochs=None, shuffle=True):
+#   return tf.estimator.inputs.pandas_input_fn(
+#       x=pd.DataFrame({k: data_set[k].values for k in FEATURES}),
+#       y=pd.Series(data_set[LABEL].values),
+#       num_epochs=num_epochs,
+#       shuffle=shuffle)
 def train_input_fn(features, labels, batch_size):
 	dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
 
 	dataset = dataset.shuffle(1000).repeat().batch(batch_size)
 
-	return dataset
+	return dataset.make_one_shot_iterator().get_next()
 ###################################################################
 
 
@@ -196,35 +208,38 @@ def eval_input_fn(features, labels=None, batch_size=None):
 # main
 def main():
 	# load data
-	load_data();
-	# (train_feature, train_label), (test_feature, test_label) = load_data()
+	(train_feature, train_label), (test_feature, test_label) = load_data()
+	print('\nData finished loading...\n')
 
-	# # set feature columns
-	# my_feature_columns = []
-	# for key in train_feature.keys():
-	# 	my_feature_columns.append(tf.feature_column.numeric_column(key=key))
+	# set feature columns
+	my_feature_columns = []
+	for key in train_feature.keys():
+		my_feature_columns.append(tf.feature_column.numeric_column(key=key))
 
-	# # build cnn
-	# model_fn = cnn()
+	# create estimator
+	wip_classifier = tf.estimator.Estimator(model_fn=cnn,
+											model_dir="/tmp/cnn_WIP_model",
+											params={
+												'feature_columns': my_feature_columns,
+											})
 
-	# # create estimator
-	# wip_classifier = tf.estimator.Estimator(model_fn=model_fn, 
-	# 										params={
-	# 											'feature_columns': my_feature_columns,
-	# 										})
 
-	# # set up logging
-	# tensors_to_log = {'probabilities': 'softmax_tensor'}
-	# logging_hook = tf.train.LoggingTensorHook(
-	# 	tensors=tensors_to_log, every_n_iter=10)
+	print('\nCNN finished configuring...\n')
 
-	# # train cnn
-	# train_input_fn = lambda:train_input_fn(train_feature, train_label, BATCH_SIZE)
+	# set up logging
+	tensors_to_log = {'probabilities': 'softmax_tensor'}
+	logging_hook = tf.train.LoggingTensorHook(
+		tensors=tensors_to_log, every_n_iter=10)
 
-	# wip_classifier.train(
-	# 	input_fn=train_input_fn,
-	# 	steps=TRAIN_STEPS,
-	# 	hooks=[logging_hook])
+	dataset = train_input_fn(train_feature, train_label, BATCH_SIZE)
+
+	print(dataset)
+
+	# train cnn
+	wip_classifier.train(
+		input_fn=lambda:train_input_fn(train_feature, train_label, BATCH_SIZE),
+		steps=TRAIN_STEPS,
+		hooks=[logging_hook])
 
 	# # freeze cnn - IDK IF THIS IS IN THE RIGHT PLACE
 	# freeze_graph.freeze_graph(input_graph = model_path +'/raw_graph_def.pb',
