@@ -93,49 +93,53 @@ def load_data():
 # define CNN model
 
 def cnn(features, labels, mode, params):
-	print('\nConfiguring CNN...\n')
 
-	# reshapse X to 4-D tensor: [batch_size, width, height, channels]
+	# reshapse X to 4-D tensor: [batch_size, steps, channels]
 	# input_layer = tf.feature_column.input_layer(features, params['feature_columns'])
-	input_layer = tf.cast(tf.reshape(features["Euclidean_Accel"], [-1, 1, 10]), tf.float32)
+	input_layer = tf.cast(tf.reshape(features["Euclidean_Accel"], [-1, 10, 1]), tf.float32)
 	print(type(input_layer))
 	# Convolutional Layer
 	# side note - strides is automatically set to 1
-	# input shape: [batch_size, 1, 10, 1]
-	# output shape: [batch_size, 1, 10, 128]
+	# input shape: [batch_size, 10, 1]
+	# output shape: [batch_size, 10, 128]
 	conv = tf.layers.conv1d(
 		inputs=input_layer,
 		filters=128,
 		kernel_size=WINDOW_SIZE,
 		padding='same',
+		strides=1,
 		activation=tf.nn.relu)
+	print(conv.get_shape())
 
 
 	# Pooling Layer
 	# pool_size is the size of the kernel ?? strides default to 1 ??
-	# input shape: [batch_size, 1, 10, 128]
-	# output shape: [batch_size, 1, 3, 128]
+	# input shape: [batch_size, 10, 128]
+	# output shape: [batch_size, 3, 128]
 	pool = tf.layers.max_pooling1d(inputs=conv, pool_size=WINDOW_SIZE, strides=1, padding='same')
 
 
 	# Flatten Layer
-	# input shape: [batch_size, 1, 10, 128]
-	# output shape: [batch_size, 1 * 3 * 128]
-	pool_flat = tf.reshape(pool, [-1, 1 * 3 * 128])
-
+	# input shape: [batch_size, 3, 128]
+	# output shape: [batch_size, 3 * 128]
+	pool_flat = tf.reshape(pool, [-1, 3 * 128])
 
 	# Dense Layer
-	# input shape: [batch_size, 1 * 3 * 128]
+	# input shape: [batch_size, 3 * 128]
 	# output shape: [batch_size, 364]
-	dense = tf.layers.dense(inputs=pool_flat, units=364, activation=tf.nn.relu)
+	print(pool_flat.get_shape())
+	dense = tf.layers.dense(inputs=pool_flat, units=384, activation=tf.nn.relu)
 
 	# Dropout Layer
+	print(dense.get_shape())
 	dropout = tf.layers.dropout(inputs=dense, rate=0.5, training=mode == tf.estimator.ModeKeys.TRAIN)
 
 	# Logits layer
 	# input shape: [batch_size, 364]
-	# output shape: [batch_size, 2]
+	# output shape: [batch_size, 6]
 	logits = tf.layers.dense(inputs=dropout, units=6)
+	print(logits.get_shape())
+	print(labels.get_shape())
 
 	predictions = {
         # Generate predictions (for PREDICT and EVAL mode)
@@ -150,7 +154,8 @@ def cnn(features, labels, mode, params):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# TRAIN and EVAL mode: loss w sigmoid cross entropy given logits
-	loss=tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
+	tf.cast(labels, tf.float32)
+	loss=tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(tf.squeeze(labels), tf.float32), logits=logits)
 
 	# TRAIN mode: train with ADAM optimizer
 	if mode == tf.estimator.ModeKeys.TRAIN:
@@ -216,6 +221,8 @@ def main():
 	for key in train_feature.keys():
 		my_feature_columns.append(tf.feature_column.numeric_column(key=key))
 
+
+	print('\nConfiguring CNN...\n')
 	# create estimator
 	wip_classifier = tf.estimator.Estimator(model_fn=cnn,
 											model_dir="/tmp/cnn_WIP_model",
@@ -231,15 +238,14 @@ def main():
 	logging_hook = tf.train.LoggingTensorHook(
 		tensors=tensors_to_log, every_n_iter=10)
 
-	dataset = train_input_fn(train_feature, train_label, BATCH_SIZE)
-
-	print(dataset)
-
+	print('\nTraining CNN...\n')
 	# train cnn
 	wip_classifier.train(
 		input_fn=lambda:train_input_fn(train_feature, train_label, BATCH_SIZE),
 		steps=TRAIN_STEPS,
 		hooks=[logging_hook])
+
+	print('\nCNN finished training...\n')
 
 	# # freeze cnn - IDK IF THIS IS IN THE RIGHT PLACE
 	# freeze_graph.freeze_graph(input_graph = model_path +'/raw_graph_def.pb',
