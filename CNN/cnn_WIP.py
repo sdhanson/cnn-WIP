@@ -115,31 +115,30 @@ def cnn(features, labels, mode, params):
 	# Pooling Layer
 	# pool_size is the size of the kernel ?? strides default to 1 ??
 	# input shape: [batch_size, 10, 128]
-	# output shape: [batch_size, 3, 128]
+	# output shape: [batch_size, 8, 128]
 	pool = tf.layers.max_pooling1d(inputs=conv, pool_size=WINDOW_SIZE, strides=1, padding='same')
 
 
 	# Flatten Layer
-	# input shape: [batch_size, 3, 128]
-	# output shape: [batch_size, 3 * 128]
-	pool_flat = tf.reshape(pool, [-1, 3 * 128])
+	# input shape: [batch_size, 8, 128]
+	# output shape: [batch_size, 8 * 128]
+	pool_flat = tf.reshape(pool, [-1, 8 * 128])
 
 	# Dense Layer
-	# input shape: [batch_size, 3 * 128]
-	# output shape: [batch_size, 364]
+	# input shape: [batch_size, 8 * 128]
+	# output shape: [batch_size, 1024]
 	print(pool_flat.get_shape())
-	dense = tf.layers.dense(inputs=pool_flat, units=384, activation=tf.nn.relu)
+	dense = tf.layers.dense(inputs=pool_flat, units=1024, activation=tf.nn.relu)
 
 	# Dropout Layer
 	print(dense.get_shape())
 	dropout = tf.layers.dropout(inputs=dense, rate=0.5, training=mode == tf.estimator.ModeKeys.TRAIN)
 
 	# Logits layer
-	# input shape: [batch_size, 364]
+	# input shape: [batch_size, 1024]
 	# output shape: [batch_size, 6]
 	logits = tf.layers.dense(inputs=dropout, units=6)
 	print(logits.get_shape())
-	print(labels.get_shape())
 
 	predictions = {
         # Generate predictions (for PREDICT and EVAL mode)
@@ -154,8 +153,13 @@ def cnn(features, labels, mode, params):
 		return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
 	# TRAIN and EVAL mode: loss w sigmoid cross entropy given logits
-	tf.cast(labels, tf.float32)
-	loss=tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(tf.squeeze(labels), tf.float32), logits=logits)
+	onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=6)
+	print(onehot_labels.get_shape())
+	loss = tf.losses.sigmoid_cross_entropy(
+        multi_class_labels=onehot_labels,
+        logits=logits)
+	# loss=tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.cast(labels, tf.float32), logits=logits)
+	# loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
 	# TRAIN mode: train with ADAM optimizer
 	if mode == tf.estimator.ModeKeys.TRAIN:
@@ -165,12 +169,12 @@ def cnn(features, labels, mode, params):
 			global_step=tf.train.get_global_step())
 		return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-	# EVAL mode: add metrics
-	eval_metric_ops = {
-		'accuracy': tf.metrics.accuracy(
-			labels=labels, predictions=predictions['classes'])}
-	return tf.estimator.EstimatorSpec(
-		mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+	# # EVAL mode: add metrics
+	# eval_metric_ops = {
+	# 	'accuracy': tf.metrics.accuracy(
+	# 		labels=labels, predictions=predictions['classes'])}
+	# return tf.estimator.EstimatorSpec(
+	# 	mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 ###################################################################
 
 
@@ -187,7 +191,7 @@ def train_input_fn(features, labels, batch_size):
 
 	dataset = dataset.shuffle(1000).repeat().batch(batch_size)
 
-	return dataset.make_one_shot_iterator().get_next()
+	return dataset
 ###################################################################
 
 

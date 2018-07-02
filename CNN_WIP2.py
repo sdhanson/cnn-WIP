@@ -13,11 +13,17 @@ from __future__ import print_function
 # Imports
 import numpy as np
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+from keras import backend as K
+
 import tensorflow as tf
+from tensorflow.python.tools import freeze_graph
+from tensorflow.python.tools import optimize_for_inference_lib
 
 import matplotlib.pyplot as plt
 from scipy import stats
 import os # os.getcwd()
+import os.path as path
 
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -98,13 +104,41 @@ def depthwise_conv2d(x, W):
 def apply_depthwise_conv(x,kernel_size,num_channels,depth):
     weights = weight_variable([1, kernel_size, num_channels, depth])
     biases = bias_variable([depth * num_channels])
-    return tf.nn.relu(tf.add(depthwise_conv2d(x, weights),biases))
+    return tf.nn.relu(tf.add(depthwise_conv2d(x, weights),biases, name="input_node"))
     
 def apply_max_pool(x,kernel_size,stride_size):
     return tf.nn.max_pool(x, ksize=[1, 1, kernel_size, 1], 
                           strides=[1, 1, stride_size, 1], padding='VALID')
 
 
+# EXPORT GAPH FOR UNITY
+def export_model(saver, input_node_names, output_node_name):
+    if not path.exists('out'):
+        os.mkdir('out')
+
+    cnn_wip2 = "cnn_wip2";
+
+    tf.train.write_graph(K.get_session().graph_def, 'out', cnn_wip2 + '_graph.pbtxt')
+
+    saver.save(K.get_session(), 'out/' + cnn_wip2 + '.chkp')
+
+    freeze_graph.freeze_graph('out/' + cnn_wip2 + '_graph.pbtxt', None, False,
+                              'out/' + cnn_wip2 + '.chkp', output_node_name,
+                              "save/restore_all", "save/Const:0",
+                              'out/frozen_' + cnn_wip2 + '.bytes', True, "")
+
+    input_graph_def = tf.GraphDef()
+    with tf.gfile.Open('out/frozen_' + cnn_wip2 + '.bytes', "rb") as f:
+        input_graph_def.ParseFromString(f.read())
+
+    output_graph_def = optimize_for_inference_lib.optimize_for_inference(
+            input_graph_def, input_node_names, [output_node_name],
+            tf.float32.as_datatype_enum)
+
+    with tf.gfile.FastGFile('out/opt_' + cnn_wip2 + '.bytes', "wb") as f:
+        f.write(output_graph_def.SerializeToString())
+
+    print("graph saved!")
 
 #window size:
     # 90 = 4.5 seconds
@@ -129,7 +163,6 @@ def apply_max_pool(x,kernel_size,stride_size):
 
 def main(): 
     # 'Saver' op to save and restore all the variables
-    #saver = tf.train.Saver()
     model_path = os.getcwd()  
     model_path = model_path + "/tmp/model.ckpt"
 
@@ -223,7 +256,7 @@ def main():
     print("Softmax outputs probabilities")     
     out_weights = weight_variable([num_hidden, num_labels])
     out_biases = bias_variable([num_labels])
-    y_ = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases)    
+    y_ = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases, name="output_node")    
     
     
     # Minimise negtive log-likelihood cost function using stochastic gradient descent optimiszer
@@ -256,14 +289,14 @@ def main():
     
         print("Testing Accuracy:", session.run(accuracy, feed_dict={X: test_x, Y: test_y}))
         # Save model weights to disk
-        #save_path = saver.save(session, model_path)
-        #print("Model saved in file: %s" % save_path)
+        saver = tf.train.Saver()
+        save_path = saver.save(session, model_path)
+        print("Model saved in file: %s" % save_path)
         # note: you would use
         # saver.restore(sess, model_path)
         # ro restore model weights from prv. saved model
     
-    
-    
+    export_model(tf.train.Saver(), ["input_node"], "output_node")
     
     print("finish")
     
