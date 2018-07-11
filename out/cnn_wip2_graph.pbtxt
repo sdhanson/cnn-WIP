@@ -1,5 +1,5 @@
 node {
-  name: "Placeholder"
+  name: "input_placeholder_x"
   op: "Placeholder"
   attr {
     key: "dtype"
@@ -28,7 +28,7 @@ node {
   }
 }
 node {
-  name: "Placeholder_1"
+  name: "Placeholder"
   op: "Placeholder"
   attr {
     key: "dtype"
@@ -419,7 +419,7 @@ node {
 node {
   name: "depthwise"
   op: "DepthwiseConv2dNative"
-  input: "Placeholder"
+  input: "input_placeholder_x"
   input: "Variable/read"
   attr {
     key: "T"
@@ -1739,7 +1739,7 @@ node {
 node {
   name: "mul"
   op: "Mul"
-  input: "Placeholder_1"
+  input: "Placeholder"
   input: "Log"
   attr {
     key: "T"
@@ -1959,7 +1959,7 @@ node {
 node {
   name: "gradients/mul_grad/Shape"
   op: "Shape"
-  input: "Placeholder_1"
+  input: "Placeholder"
   attr {
     key: "T"
     value {
@@ -2059,7 +2059,7 @@ node {
 node {
   name: "gradients/mul_grad/Mul_1"
   op: "Mul"
-  input: "Placeholder_1"
+  input: "Placeholder"
   input: "gradients/Sum_grad/Tile"
   attr {
     key: "T"
@@ -3528,7 +3528,7 @@ node {
 node {
   name: "gradients/depthwise_grad/Shape"
   op: "Shape"
-  input: "Placeholder"
+  input: "input_placeholder_x"
   attr {
     key: "T"
     value {
@@ -3616,7 +3616,7 @@ node {
 node {
   name: "gradients/depthwise_grad/DepthwiseConv2dNativeBackpropFilter"
   op: "DepthwiseConv2dNativeBackpropFilter"
-  input: "Placeholder"
+  input: "input_placeholder_x"
   input: "gradients/depthwise_grad/Shape_1"
   input: "gradients/input_node_grad/tuple/control_dependency"
   attr {
@@ -4024,7 +4024,7 @@ node {
 node {
   name: "ArgMax_1"
   op: "ArgMax"
-  input: "Placeholder_1"
+  input: "Placeholder"
   input: "ArgMax_1/dimension"
   attr {
     key: "T"
