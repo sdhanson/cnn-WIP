@@ -116,7 +116,7 @@ def export_model(saver, input_node_names, output_node_name):
     if not path.exists('out'):
         os.mkdir('out')
 
-    cnn_wip2 = "cnn_wip2";
+    cnn_wip2 = "cnn_wip2_sara";
 
     tf.train.write_graph(K.get_session().graph_def, 'out', cnn_wip2 + '_graph.pbtxt')
 
@@ -168,13 +168,13 @@ def main():
 
     
     # DATA PREPROCESSING VARS
-    visualize = True           # bool - display graph or no
+    visualize = False           # bool - display graph or no
     window_size = 90            # length of sliding window
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
         
     num_channels = 1            # num inputs (vm or triaxial)
-    num_labels = 3              # num outputs (classification labels)
+    num_labels = 2              # num outputs (classification labels)
 
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
@@ -189,13 +189,14 @@ def main():
     kernel_size2 = 6            # number of channels of output from conv layer
     # Training 
     learning_rate = 0.0001
-    training_epochs = 1         #5 is sufficient 
+    training_epochs = 5         #5 is sufficient 
     # total_batches  is set in relation to train_x.shape later
     
     
     print(" \nDATA PREPROCESSING") 
     print("read data") 
-    dataset = read_data("../WISDM/WISDM_haley_label.csv")
+    # dataset = read_data("../WISDM/WISDM_haley_label.csv")
+    dataset = read_data("./GO_1_raw.csv")
 
     print("normalize feature")
     dataset['vector-mag'] = feature_normalize(dataset['vector-mag'])
