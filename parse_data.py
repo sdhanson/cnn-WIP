@@ -34,7 +34,7 @@ def parse_text(foldername, filename, data):
     for line in inputfile:
 
         #remove ;\n and sep. data by , 
-        line = line[:-2] 
+        line = line[:-1] 
         temp = line.split(",")
 
         # error check - ensure appropriate number of inputs        

@@ -68,6 +68,7 @@ def parse_text(foldername, filename, data):
 
         #is data vector magnitude or triaxial?
         new_data = [str(label),  temp[1], str(vector_mag)]
+        print(new_data)
         #new_data = [str(vector_mag), temp[1], label] 
         #new_data = [ temp[1],  temp[2],  temp[3], label]
      
