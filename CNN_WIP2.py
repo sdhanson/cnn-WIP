@@ -189,7 +189,7 @@ def main():
     kernel_size2 = 2            # number of channels of output from conv layer
     # Training 
     learning_rate = 0.0001
-    training_epochs = 1         #5 is sufficient 
+    training_epochs = 5         #5 is sufficient 
     # total_batches  is set in relation to train_x.shape later
     
     
