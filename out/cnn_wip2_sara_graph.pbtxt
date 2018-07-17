@@ -6024,18 +6024,6 @@ node {
     }
   }
 }
-node {
-  name: "init_1"
-  op: "NoOp"
-  input: "^Variable/Assign"
-  input: "^Variable_1/Assign"
-  input: "^Variable_2/Assign"
-  input: "^Variable_3/Assign"
-  input: "^Variable_4/Assign"
-  input: "^Variable_5/Assign"
-  input: "^Variable_6/Assign"
-  input: "^Variable_7/Assign"
-}
 versions {
   producer: 24
 }

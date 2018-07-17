@@ -301,7 +301,7 @@ def main():
         # saver.restore(sess, model_path)
         # ro restore model weights from prv. saved model
     
-    export_model(tf.train.Saver(), ["input_node"], "output_node")
+    	export_model(tf.train.Saver(), ["input_node"], "output_node")
     
     print("finish")
     
