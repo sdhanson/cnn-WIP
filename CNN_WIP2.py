@@ -36,6 +36,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 def read_data(file_path):
     column_names = ['activity','timestamp', 'vector-mag']
     data = pd.read_csv(file_path,header = 0, names = column_names)
+    # data = data.reindex(np.random.permutation(data.index))
+    # print(data)
     return data
 
 def feature_normalize(dataset):
@@ -189,7 +191,7 @@ def main():
     kernel_size2 = 2            # number of channels of output from conv layer
     # Training 
     learning_rate = 0.0001
-    training_epochs = 4         #5 is sufficient 
+    training_epochs = 2         #5 is sufficient 
     # total_batches  is set in relation to train_x.shape later
     
     
@@ -198,8 +200,8 @@ def main():
     # dataset = read_data("../WISDM/WISDM_haley_label.csv")
     dataset = read_data("./GO_1_raw.csv")
 
-    print("normalize feature")
-    dataset['vector-mag'] = feature_normalize(dataset['vector-mag'])
+    # print("normalize feature")
+    # dataset['vector-mag'] = feature_normalize(dataset['vector-mag'])
     
     print("visualize data")    
     if (visualize):
@@ -210,6 +212,7 @@ def main():
         
     print("segment signals")    
     segments, labels = segment_signal(dataset, window_size)
+    print(segments)
     labels = np.asarray(pd.get_dummies(labels), dtype = np.int8)
     
     reshaped_segments = segments.reshape(len(segments), 1, window_size, num_channels)    
@@ -221,7 +224,7 @@ def main():
     test_x = reshaped_segments[~train_test_split]
     test_y = labels[~train_test_split]
 
-    predict = np.array([0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1139805,0.1072912,0.1072912,0.1962212,0.1962212,0.3138215,0.3138215,0.3138215,0.1719452,0.1719452,0.05325568,0.05325568,0.1709562,0.1709562,0.3227122,0.3227122,0.3896469,0.3896469,0.1290453,0.1290453,0.1729235,0.1729235,0.06428681,0.06428681,0.3944435,0.3944435,0.5930174,0.5930174,0.4377055,0.4377055,0.2751099,0.2751099,0.1984278,0.1984278,0.5268957,0.5268957,0.5268957,0.6580063,0.4031855,0.4031855,0.2062997,0.2062997,0.1068822,0.1068822,0.1068822,0.3127724,0.3127724,0.4308511,0.4308511,0.3025039,0.3025039,0.2085527,0.222002,0.222002,0.222002,0.5509907,0.5509907,0.4942238,0.4942238])
+    predict = np.array([0.848524113047 ,1.58163582291 ,1.58163582291, 1.52954069426, 6.57268546133, 7.38546518379, 7.38546518379, 1.61475645265, 3.01760083498, 3.01760083498, 5.76850277868, 5.01018299524, 5.01018299524, 1.41501550477, 0.754068041821, 0.754068041821, 0.753660838328, 1.96509359661, 1.96509359661, 2.82629036879, 1.45099468309, 0.998067540133, 0.998067540133, 1.57042701653, 1.57042701653, 1.00493524959, 0.558523831648, 0.655353796242, 0.655353796242, 0.661641941911, 0.856198374392, 0.856198374392, 0.808974031543, 0.831827190537, 0.831827190537, 0.969459043919, 0.880326451026, 0.456902047508, 0.456902047508, 0.241778039897, 0.241778039897, 0.262912228107, 0.290562157743, 0.72008842357, 0.72008842357, 1.39548726346, 1.97309391695, 2.55865355988, 2.55865355988, 0.15004537437, 4.68267434294, 4.68267434294, 4.18507900813, 4.59276048465, 4.59276048465, 2.72919885501, 0.912506716504, 0.912506716504, 3.15768301092, 3.57336440789, 1.64285908664, 1.64285908664, 1.14295237295, 1.27661474513, 1.27661474513, 1.09487989065, 1.40244829748, 1.40244829748, 1.1800918669, 0.747701214832, 0.747701214832, 1.23024453871, 1.29924596256, 0.685612138565, 0.685612138565, 0.442574242439, 0.630389361129, 0.630389361129, 0.521737298604, 0.443005753053, 0.443005753053, 0.425106586618, 0.575294303207, 0.575294303207, 0.574949036257, 0.510081077671, 0.510081077671, 0.468602836395, 0.486943486673, 0.567981800018])
     predict_x = predict.reshape(1, 1, window_size, num_channels)
     
     total_batchs = train_x.shape[0] 
@@ -292,7 +295,7 @@ def main():
                   session.run(accuracy, feed_dict={X: train_x, Y: train_y}))
     
         print("Testing Accuracy:", session.run(accuracy, feed_dict={X: test_x, Y: test_y}))
-        print("Prediction:", session.run(y_, feed_dict={X: predict_x}))
+        print("Prediction:", session.run(tf.argmax(y_, 1), feed_dict={X: predict_x}))
         # Save model weights to disk
         saver = tf.train.Saver()
         save_path = saver.save(session, model_path)

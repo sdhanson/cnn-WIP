@@ -47,7 +47,7 @@ def parse_text(foldername, filename, data):
         label= select_label(temp[0])
         if (label == 6): # undesired label
             continue
-        label= temp[0]
+        # label= temp[0]
 
         # select specific data
                
@@ -67,7 +67,7 @@ def parse_text(foldername, filename, data):
         vector_mag = euclidean_norm(float(temp[2]), float(temp[3]), float(temp[4]))
 
         #is data vector magnitude or triaxial?
-        new_data = [str(label),  temp[1], str(vector_mag)]
+        new_data = [label,  temp[1], str(vector_mag)]
         #new_data = [str(vector_mag), temp[1], label] 
         #new_data = [ temp[1],  temp[2],  temp[3], label]
      
@@ -91,7 +91,8 @@ def parse_text(foldername, filename, data):
 #Standing: 48,395 (4.4%)
 
 def select_label(label):
-    if (label == "Walking"): 
+    #walking = 1 standing = 0
+    if (label == "1"): 
         return 0
     elif (label == "Jogging"): 
         return 1
@@ -101,8 +102,8 @@ def select_label(label):
         return 6 #3
     elif (label == "Sitting"): 
         return 6 #4
-    elif (label == "Standing"): 
-        return 5
+    elif (label == "0"): 
+        return 1
     else:
         return 6 
 
