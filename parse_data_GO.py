@@ -83,27 +83,19 @@ def parse_text(foldername, filename, data):
     inputfile.close()
     return
 
-#Walking: 424,400 (38.6%)
-#Jogging: 342,177 (31.2%)
-#Upstairs: 122,869 (11.2%)
-#Downstairs: 100,427 (9.1%)
-#Sitting: 59,939 (5.5%)
-#Standing: 48,395 (4.4%)
+
+#Standing
+#Walking
+#Stepping
 
 def select_label(label):
     #walking = 1 standing = 0
-    if (label == "1"): 
+    if (label == "Standing"): 
         return 0
-    elif (label == "Jogging"): 
+    elif (label == "Walking"): 
         return 1
-    elif (label == "Upstairs"): 
-        return 6 #2
-    elif (label == "Downstairs"): 
-        return 6 #3
-    elif (label == "Sitting"): 
-        return 6 #4
-    elif (label == "0"): 
-        return 1
+    elif (label == "Stepping"): 
+        return 2
     else:
         return 6 
 
