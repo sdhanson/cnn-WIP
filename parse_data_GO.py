@@ -90,12 +90,12 @@ def parse_text(foldername, filename, data):
 
 def select_label(label):
     #walking = 1 standing = 0
-    if (label == "Standing"): 
+    if (label == "0"): 
         return 0
-    elif (label == "Walking"): 
+    elif (label == "1"): 
         return 1
-    elif (label == "Stepping"): 
-        return 2
+    # elif (label == "Stepping"): 
+    #     return 2
     else:
         return 6 
 

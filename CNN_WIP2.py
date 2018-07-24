@@ -161,6 +161,7 @@ def export_model(saver, input_node_names, output_node_name):
 # 40, 20, 20, 10
 # 30, 20, 20, 2, (2) [97.08%] **
 # 20, 10, 10, 2, (2) [91.84%]
+# 10, 3, 3, 5, 3
 
     
 
@@ -172,7 +173,7 @@ def main():
     
     # DATA PREPROCESSING VARS
     visualize = False           # bool - display graph or no
-    window_size = 10            # length of sliding window
+    window_size = 20            # length of sliding window
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
         
@@ -182,17 +183,17 @@ def main():
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
     batch_size = 10
-    kernel_size = 60            # number of channels of output from conv layer
-    depth = 60
+    kernel_size = 10            # number of channels of output from conv layer
+    depth = 10
     num_hidden = 1000
     # Pooling Layer
-    pooling_filter_size = 20
+    pooling_filter_size = 2
     stride = 2
     #Second Confolution
-    kernel_size2 = 3            # number of channels of output from conv layer
+    kernel_size2 = 2            # number of channels of output from conv layer
     # Training 
     learning_rate = 0.0001
-    training_epochs = 2         #5 is sufficient 
+    training_epochs = 5         #5 is sufficient 
     # total_batches  is set in relation to train_x.shape later
     
     
@@ -241,7 +242,7 @@ def main():
 
     # The pooling layer’s filter size is set to 20 and with a stride of 2. 
     print("Max pooling operation")
-    p = apply_max_pool(c,pooling_filter_size,stride) 
+    p = apply_max_pool(c,pooling_filter_size,stride)  
 
     # Next, the conv. layer takes an input of max-pooling layer
     # and applies a filter of size 6. It will have 1/10 of depth of max-pooling layer.
@@ -257,6 +258,7 @@ def main():
     # Thanh function is used as non-linearity
     print("Tanh operation for non-linearity")    
     f_weights_l1 = weight_variable([shape[1] * shape[2] * depth * num_channels * (depth//10), num_hidden])
+    # f_weights_l1 = weight_variable([shape[1] * shape[2] * depth * num_channels, num_hidden])
     f_biases_l1 = bias_variable([num_hidden])
     f = tf.nn.tanh(tf.add(tf.matmul(c_flat, f_weights_l1),f_biases_l1))
     
