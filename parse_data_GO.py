@@ -94,6 +94,10 @@ def select_label(label):
         return 0
     elif (label == "1"): 
         return 1
+    elif(label == "Walking"):
+        return 1
+    elif(label == "Stepping"):
+        return 0
     # elif (label == "Stepping"): 
     #     return 2
     else:
