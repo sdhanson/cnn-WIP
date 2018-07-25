@@ -173,7 +173,7 @@ def main():
     
     # DATA PREPROCESSING VARS
     visualize = True           # bool - display graph or no
-    window_size = 20            # length of sliding window
+    window_size = 90            # length of sliding window
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
         
@@ -183,11 +183,11 @@ def main():
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
     batch_size = 10
-    kernel_size = 10            # number of channels of output from conv layer
-    depth = 10
+    kernel_size = 60            # number of channels of output from conv layer
+    depth = 60
     num_hidden = 1000
     # Pooling Layer
-    pooling_filter_size = 2
+    pooling_filter_size = 20
     stride = 2
     #Second Confolution
     kernel_size2 = 2            # number of channels of output from conv layer
