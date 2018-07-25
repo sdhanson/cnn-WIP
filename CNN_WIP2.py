@@ -172,7 +172,7 @@ def main():
 
     
     # DATA PREPROCESSING VARS
-    visualize = False           # bool - display graph or no
+    visualize = True           # bool - display graph or no
     window_size = 20            # length of sliding window
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
