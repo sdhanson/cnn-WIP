@@ -64,7 +64,8 @@ def parse_text(foldername, filename, data):
         #    label = 0;  
 
         # calculate vector magnitude Euclidean (L2) norm
-        vector_mag = euclidean_norm(float(temp[2]), float(temp[3]), float(temp[4]))
+        # vector_mag = euclidean_norm(float(temp[2]), float(temp[3]), float(temp[4]))
+        vector_mag = float(temp[3])
 
         #is data vector magnitude or triaxial?
         new_data = [label,  temp[1], str(vector_mag)]
