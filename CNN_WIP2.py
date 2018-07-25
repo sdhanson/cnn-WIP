@@ -34,7 +34,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 # DATA PREPROCESSING 
 # Load the training data into two NumPy arrays. 
 def read_data(file_path):
-    column_names = ['activity','timestamp', 'vector-mag']
+    #column_names = ['activity','timestamp', 'vector-mag']
+    column_names = ['activity','timestamp', 'x', 'y', 'z'] 
     data = pd.read_csv(file_path,header = 0, names = column_names)
     # data = data.reindex(np.random.permutation(data.index))
     # print(data)
@@ -56,10 +57,10 @@ def plot_axis(ax, x, y, title):
 
 def plot_activity(activity,data):
     fig, (ax0) = plt.subplots(nrows = 1, figsize = (15, 10), sharex = True)
-    #plot_axis(ax0, data['timestamp'], data['x-axis'], 'x-axis')
-    #plot_axis(ax1, data['timestamp'], data['y-axis'], 'y-axis')
-    #plot_axis(ax2, data['timestamp'], data['z-axis'], 'z-axis')
-    plot_axis(ax0, data['timestamp'], data['vector-mag'], 'vector-mag')
+    plot_axis(ax0, data['timestamp'], data['x-axis'], 'x-axis')
+    plot_axis(ax1, data['timestamp'], data['y-axis'], 'y-axis')
+    plot_axis(ax2, data['timestamp'], data['z-axis'], 'z-axis')
+    #plot_axis(ax0, data['timestamp'], data['vector-mag'], 'vector-mag')
     plt.subplots_adjust(hspace=0.2)
     fig.suptitle(activity)
     plt.subplots_adjust(top=0.90)
@@ -72,11 +73,11 @@ def plot_activity(activity,data):
     # parameter by moving over the signal by fixed step size. The window size 
     # used is 90, which equals to 4.5 seconds of data and as we are moving each 
     # time by 45 points the step size is equal to 2.25 seconds. 
-def windows(data, size):
+def windows(data, size): 
     start = 0
     while start < data.count():
         yield int(start), int(start + size)
-        start += (size / 2)
+        start += (size / 2) 
         
         
 def segment_signal(data,window_size):
@@ -84,7 +85,10 @@ def segment_signal(data,window_size):
     labels = np.empty((0)) 
     
     for (start, end) in windows(data["timestamp"], window_size):
-        x = data["vector-mag"][start:end] 
+        #x = data["vector-mag"][start:end] 
+        x = data["x"][start:end] 
+        y = data["y"][start:end] 
+        z = data["z"][start:end] 
         if(len(data["timestamp"][start:end]) == window_size):
             segments = np.vstack([segments,np.dstack([x])])
             labels = np.append(labels,stats.mode(data["activity"][start:end])[0][0])
@@ -173,7 +177,7 @@ def main():
     
     # DATA PREPROCESSING VARS
     visualize = True           # bool - display graph or no
-    window_size = 90            # length of sliding window
+    window_size = 20            # length of sliding window
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
         
@@ -183,11 +187,11 @@ def main():
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
     batch_size = 10
-    kernel_size = 60            # number of channels of output from conv layer
-    depth = 60
+    kernel_size = 10            # number of channels of output from conv layer
+    depth = 10
     num_hidden = 1000
     # Pooling Layer
-    pooling_filter_size = 20
+    pooling_filter_size = 2
     stride = 2
     #Second Confolution
     kernel_size2 = 2            # number of channels of output from conv layer

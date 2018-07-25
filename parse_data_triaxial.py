@@ -10,8 +10,8 @@ import csv
 def main():
 
     #filename = input("enter filename: ") 
-    filename = 'WISDM_ar_v1.1_raw'
-    foldername = 'WISDM_v1.1'
+    filename = 'GO_1_raw'
+    foldername = 'GO_v1.1'
     csvname = filename + '.csv'
 
     #header_temp = ['User', 'Activity', 'TimeStamp', 'x_acceleration', 'y_acceleration', 'z_acceleration']
@@ -36,8 +36,21 @@ def parse_text(foldername, filename, data):
         line = line[:-2] 
         temp = line.split(",")
 
+
+
+        if (len(temp) != 6):
+            continue
+
+        del temp[0] #remove user (id#)
+        #del temp[1] #remove time stamp 
+        
+        #is label string or number?
+        label = select_label(temp[0])
+        if (label == 6): # undesired label
+            continue
+
         ## OR Use triaxial information 
-        new_data = [ temp[0], temp[1],  temp[2],  temp[3], temp[4]. temp[5]];
+        new_data = [ label, temp[1],  temp[2],  temp[3], temp[4]];
         #    header_temp = ['User', 'Activity', 'TimeStamp', 'x_acceleration', 'y_acceleration', 'z_acceleration']
 
      
@@ -53,14 +66,25 @@ def parse_text(foldername, filename, data):
     inputfile.close()
     return
 
-
+def select_label(label):
+    #walking = 1 standing = 0
+    if (label == "0"): 
+        return 0
+    elif (label == "1"): 
+        return 1
+    elif(label == "Walking"):
+        return 1
+    elif(label == "Stepping"):
+        return 0
+    else:
+        return 6 
 
         
 # Write data to the output file (CSV)
 def write_csv(csvname, data):
     print("Write to CSV")
     current_line = 0; 
-    num_lines = sum(1 for line in open('WISDM_v1.1'+'/'+'WISDM_ar_v1.1_raw' + '.txt'))    
+    num_lines = sum(1 for line in open('GO_v1.1'+'/'+'GO_1_raw' + '.txt'))    
     
     with open(csvname,'a') as myfile:
         myfile = csv.writer(myfile, delimiter = ',', lineterminator = '\n')

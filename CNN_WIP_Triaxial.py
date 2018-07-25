@@ -28,14 +28,14 @@ tf.logging.set_verbosity(tf.logging.INFO)
 # DATA PREPROCESSING 
 # Load the training data into two NumPy arrays. 
 def read_data(file_path):
-    column_names = ['name', 'activity','timestamp', 'x-axis', 'y-axis', 'z-axis']
+    column_names = ['activity','timestamp', 'x-axis', 'y-axis', 'z-axis']
     data = pd.read_csv(file_path,header = 0, names = column_names)
     return data
 
-def feature_normalize(dataset):
-    mu = np.mean(dataset,axis = 0)
-    sigma = np.std(dataset,axis = 0)
-    return (dataset - mu)/sigma
+# def feature_normalize(dataset):
+#     mu = np.mean(dataset,axis = 0)
+#     sigma = np.std(dataset,axis = 0)
+#     return (dataset - mu)/sigma
 
 def plot_axis(ax, x, y, title):
     ax.plot(x, y)
@@ -139,8 +139,8 @@ def main():
     input_width = window_size;  # length of input for CNN
     input_height = 1            # 1D data          
         
-    num_channels = 1            # num inputs (vm or triaxial)
-    num_labels = 3              # num outputs (classification labels)
+    num_channels = 3            # num inputs (vm or triaxial)
+    num_labels = 2              # num outputs (classification labels)
 
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
@@ -152,7 +152,7 @@ def main():
     pooling_filter_size = 20
     stride = 2
     #Second Confolution
-    kernel_size2 = 6            # number of channels of output from conv layer
+    kernel_size2 = 2            # number of channels of output from conv layer ( was 6 now 2 )
     # Training 
     learning_rate = 0.0001
     training_epochs = 1         #5 is sufficient 
@@ -161,14 +161,14 @@ def main():
     
     print(" \nDATA PREPROCESSING") 
     print("read data") 
-    dataset = read_data("../WISDM/WISDM_haley_label.csv") # CHANGE ME
+    dataset = read_data("./GO_1_raw.csv") # CHANGE ME
 
-    print("normalize x") 
-    dataset['x-axis'] = feature_normalize(dataset['x-axis'])
-    print("normalize y")
-    dataset['y-axis'] = feature_normalize(dataset['y-axis'])
-    print("normalize z")    
-    dataset['z-axis'] = feature_normalize(dataset['z-axis'])
+    # print("normalize x") 
+    # dataset['x-axis'] = feature_normalize(dataset['x-axis'])
+    # print("normalize y")
+    # dataset['y-axis'] = feature_normalize(dataset['y-axis'])
+    # print("normalize z")    
+    # dataset['z-axis'] = feature_normalize(dataset['z-axis'])
     
     print("visualize data")    
     if (visualize): 
