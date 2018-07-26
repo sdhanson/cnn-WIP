@@ -13,11 +13,17 @@ from __future__ import print_function
 # Imports
 import numpy as np
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+from keras import backend as K
+
 import tensorflow as tf
+from tensorflow.python.tools import freeze_graph
+from tensorflow.python.tools import optimize_for_inference_lib
 
 import matplotlib.pyplot as plt
 from scipy import stats
 import os # os.getcwd()
+import os.path as path
 
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -102,6 +108,35 @@ def apply_depthwise_conv(x,kernel_size,num_channels,depth):
 def apply_max_pool(x,kernel_size,stride_size):
     return tf.nn.max_pool(x, ksize=[1, 1, kernel_size, 1], 
                           strides=[1, 1, stride_size, 1], padding='VALID')
+
+# EXPORT GAPH FOR UNITY
+def export_model(saver, input_node_names, output_node_name):
+    if not path.exists('out'):
+        os.mkdir('out')
+
+    cnn_wip2 = "cnn_wip2_sara";
+
+    tf.train.write_graph(K.get_session().graph_def, 'out', cnn_wip2 + '_graph.pbtxt')
+
+    saver.save(K.get_session(), 'out/' + cnn_wip2 + '.chkp')
+
+    freeze_graph.freeze_graph('out/' + cnn_wip2 + '_graph.pbtxt', None, False,
+                              'out/' + cnn_wip2 + '.chkp', output_node_name,
+                              "save/restore_all", "save/Const:0",
+                              'out/frozen_' + cnn_wip2 + '.bytes', True, "")
+
+    input_graph_def = tf.GraphDef()
+    with tf.gfile.Open('out/frozen_' + cnn_wip2 + '.bytes', "rb") as f:
+        input_graph_def.ParseFromString(f.read())
+
+    output_graph_def = optimize_for_inference_lib.optimize_for_inference(
+            input_graph_def, input_node_names, [output_node_name],
+            tf.float32.as_datatype_enum)
+
+    with tf.gfile.FastGFile('out/opt_' + cnn_wip2 + '.bytes', "wb") as f:
+        f.write(output_graph_def.SerializeToString())
+
+    print("graph saved!")
 
 
 
@@ -258,12 +293,16 @@ def main():
                   session.run(accuracy, feed_dict={X: train_x, Y: train_y}))
     
         print("Testing Accuracy:", session.run(accuracy, feed_dict={X: test_x, Y: test_y}))
-        # Save model weights to disk
-        #save_path = saver.save(session, model_path)
-        #print("Model saved in file: %s" % save_path)
+
+                # Save model weights to disk
+        saver = tf.train.Saver()
+        save_path = saver.save(session, model_path)
+        print("Model saved in file: %s" % save_path)
         # note: you would use
         # saver.restore(sess, model_path)
         # ro restore model weights from prv. saved model
+    
+        export_model(tf.train.Saver(), ["input_node"], "output_node")
     
     
     
