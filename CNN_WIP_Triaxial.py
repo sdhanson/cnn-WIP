@@ -97,7 +97,7 @@ def depthwise_conv2d(x, W):
 def apply_depthwise_conv(x,kernel_size,num_channels,depth):
     weights = weight_variable([1, kernel_size, num_channels, depth])
     biases = bias_variable([depth * num_channels])
-    return tf.nn.relu(tf.add(depthwise_conv2d(x, weights),biases))
+    return tf.nn.relu(tf.add(depthwise_conv2d(x, weights),biases, name="input_node"))
     
 def apply_max_pool(x,kernel_size,stride_size):
     return tf.nn.max_pool(x, ksize=[1, 1, kernel_size, 1], 
@@ -193,7 +193,7 @@ def main():
     total_batchs = train_x.shape[0] 
 
     print(" \n\nSET UP CNN \nDefine Tensorflow placeholders for input/output")    
-    X = tf.placeholder(tf.float32, shape=[None,input_height,input_width,num_channels])
+    X = tf.placeholder(tf.float32, shape=[None,input_height,input_width,num_channels], name="input_placeholder_x")
     Y = tf.placeholder(tf.float32, shape=[None,num_labels])
 
     # The 1st conv. layer has filter size and depth of 60 
@@ -226,7 +226,7 @@ def main():
     print("Softmax outputs probabilities")     
     out_weights = weight_variable([num_hidden, num_labels])
     out_biases = bias_variable([num_labels])
-    y_ = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases)    
+    y_ = tf.nn.softmax(tf.matmul(f, out_weights) + out_biases, name="output_node")    
     
     
     # Minimise negtive log-likelihood cost function using stochastic gradient descent optimiszer
