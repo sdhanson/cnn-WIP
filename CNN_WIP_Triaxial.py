@@ -175,7 +175,7 @@ def main():
     input_height = 1            # 1D data          
         
     num_channels = 3            # num inputs (vm or triaxial)
-    num_labels = 2              # num outputs (classification labels)
+    num_labels = 3              # num outputs (classification labels)
 
     # CONVOLUTIONAL NEURAL NET VARS
     # Convolutional Layer 
@@ -187,7 +187,7 @@ def main():
     pooling_filter_size = 10
     stride = 2
     #Second Confolution
-    kernel_size2 = 2            # number of channels of output from conv layer ( was 6 now 2 )
+    kernel_size2 = 3            # number of channels of output from conv layer ( was 6 now 2 )
     # Training 
     learning_rate = 0.0001
     training_epochs = 1         #5 is sufficient 

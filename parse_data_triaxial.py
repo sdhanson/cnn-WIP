@@ -76,6 +76,8 @@ def select_label(label):
         return 1
     elif(label == "Stepping"):
         return 0
+    elif(label == "Looking"):
+        return 2
     else:
         return 6 
 
