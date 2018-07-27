@@ -10,7 +10,7 @@ import csv
 def main():
 
     #filename = input("enter filename: ") 
-    filename = 'GO_1_raw'
+    filename = 'GO_1_raw_GEAR'
     foldername = 'GO_v1.1'
     csvname = filename + '.csv'
 
@@ -74,7 +74,7 @@ def select_label(label):
         return 1
     elif(label == "Walking"):
         return 1
-    elif(label == "Stepping"):
+    elif(label == "Standing"):
         return 0
     elif(label == "Looking"):
         return 2
@@ -86,7 +86,7 @@ def select_label(label):
 def write_csv(csvname, data):
     print("Write to CSV")
     current_line = 0; 
-    num_lines = sum(1 for line in open('GO_v1.1'+'/'+'GO_1_raw' + '.txt'))    
+    num_lines = sum(1 for line in open('GO_v1.1'+'/'+'GO_1_raw_GEAR' + '.txt'))    
     
     with open(csvname,'a') as myfile:
         myfile = csv.writer(myfile, delimiter = ',', lineterminator = '\n')
