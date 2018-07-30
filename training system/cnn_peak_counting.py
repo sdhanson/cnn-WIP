@@ -7,26 +7,36 @@ Created on Mon Jul 23 10:51:31 2018
 import matplotlib.pyplot as plt
 
 #peakfilename = "training_steps_CNN_controller.txt"
-filename = "training_steps_CNN.txt"
-outputfilename = "training_out_counting.txt"
+filename = "training_steps_CNN_big.txt"
+outputfilename = "training_out_counting_big_test.txt"
 
 values = []
 count = 0
 i = 0
 
+#NEED TO DO THE 56000 AS BEGINNING ONE
+BATCH = 10
+BEGIN = 110000
+END = BEGIN + BATCH
 #with open(peakfilename) as peakfile:
 #    for peakline in peakfile:
 #        count += 1
         
 with open (filename) as file:
     for line in file:
-        line = line.strip()
-        parts = line.split(",")
-        temp = []
-        temp.append(float(parts[2]))
-        temp.append(float(parts[4]))
-        values.append(temp)
-        i += 1
+        if i >= BEGIN:
+            line = line.strip()
+            parts = line.split(",")
+            if parts[1] == "1":
+                temp = []
+                temp.append(float(parts[2]))
+                temp.append(float(parts[4]))
+                values.append(temp)
+                i += 1
+        else:
+            i += 1
+        if i == END:
+            break
 
 times = []
 y = []
@@ -91,15 +101,16 @@ def partition(alist,first,last):
 quickSort(values)
 
 peaks = []
+print(len(values))
 peaks.append(values[len(values)-1])
 
 x = 0
 count = 0
 
-STEPS = 31
-WINDOW = 0.5
+STEPS = 50
+WINDOW = 0.2
 
-while x < STEPS and count < len(values)-1:
+while x < STEPS and count < len(values):
     skip = False
     for peak in peaks:
         if values[len(values)-1 - count][0] >= peak[0] - WINDOW and values[len(values)-1 - count][0] <= peak[0] + WINDOW:
@@ -108,8 +119,6 @@ while x < STEPS and count < len(values)-1:
         peaks.append(values[len(values)-1 - count])
         x += 1
     count += 1
-
-print(peaks)
    
 
 peaktimes = []
@@ -127,7 +136,6 @@ plt.show()
 plt.close()
 
 
-
 labels = []
 i = 0
 j = 0
@@ -135,32 +143,47 @@ k = 0
 r = 0
 
 peaktimes.sort()
-print(peaktimes)
 BASE_ACTIVITY = "Walking"
         
 with open (filename) as file:
+    check = 0
     for line in file:
-        labels.append(BASE_ACTIVITY)
+        if check >= BEGIN:
+            labels.append(BASE_ACTIVITY)
+            if check == END:
+                break
+        check += 1
 
+print(len(labels))
 with open (filename) as file:
+    check = 0
     for line in file:
-        if j > r:
-            line = line.strip()
-            parts = line.split(",")
-            if i < len(peaktimes):
-                if float(parts[2]) == peaktimes[i]:
-                    print(parts[2])
-                    for x in range(j-4, j+6):
-                        labels[x] = "Stepping"
-                    i += 1
-                    r = j+5
-        j += 1
-
+        if check >= BEGIN:
+            if j > r:
+                line = line.strip()
+                parts = line.split(",")
+                if i < len(peaktimes):
+                    if float(parts[2]) == peaktimes[i]:
+                        for x in range(j-4, j+6):
+                            labels[x] = "Stepping"
+                        i += 1
+                        r = j+5
+            j += 1
+            if check == END:
+                break
+        check += 1
+#
 with open(filename) as finalfile:
-    with open(outputfilename, "w+") as outputfile:
+    with open(outputfilename, "a+") as outputfile:
+        check = 0
         for finalline in finalfile:
-            finalline = finalline.strip()
-            parts = finalline.split(",")
-            templine = parts[0] + "," + labels[k] + "," + parts[2] + "," + parts[3] + "," + parts[4] + "," + parts[5] + "\n"
-            outputfile.write(templine)
-            k += 1
+            if check >= BEGIN:
+                finalline = finalline.strip()
+                parts = finalline.split(",")
+                templine = parts[0] + "," + labels[k] + "," + parts[2] + "," + parts[3] + "," + parts[4] + "," + parts[5] + "\n"
+                outputfile.write(templine)
+                k += 1
+            check += 1
+            if check == END:
+                break
+
