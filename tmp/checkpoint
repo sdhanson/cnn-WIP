@@ -1,2 +1,0 @@
-model_checkpoint_path: "/Users/sarahanson/tensorflow/cnn-WIP/tmp/model.ckpt"
-all_model_checkpoint_paths: "/Users/sarahanson/tensorflow/cnn-WIP/tmp/model.ckpt"
